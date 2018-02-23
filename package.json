@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "prestart": "mongod --dbpath data/ --fork --logpath=/Users/brandonsharp/Desktop/Inventorydb.log", 
+    "prestart-osx": "mongod --dbpath data/ --fork --logpath=/Users/brandonsharp/Desktop/Inventorydb.log",
+    "prestart-win": "mongod.exe --dbpath data",
     "start": "node server.js",
     "poststop": "mongo admin --eval 'db.shutdownServer()'" },
   "author": "CaptainKoopa",
