@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
-  "scripts": {},
+  "scripts": {
+    "prestart": "mongod --dbpath data/ --fork --logpath=/Users/brandonsharp/Desktop/Inventorydb.log", 
+    "start": "node server.js",
+    "poststop": "mongo admin --eval 'db.shutdownServer()'" },
   "author": "CaptainKoopa",
   "license": "ISC",
   "dependencies": {
