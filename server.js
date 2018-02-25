@@ -3,7 +3,15 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
-const urlencodedParser = bodyParser.urlencoded({extended: false});
+//Start the server
+const server = app.listen(8080, () => console.log('Listening on port 8080!'))
+
+//Socket IO requirements
+const socket = require('socket.io');
+const io = socket(server);
+io.on('connection', (client) => {
+    console.log('A new friend has arrived from ' + client.request.connection.remoteAddress);
+});
 
 //MongoDB requirements
 const MongoClient = require('mongodb').MongoClient;
@@ -20,9 +28,8 @@ MongoClient.connect(url, (err,client)=>{
 const empSubString = 'EMP';
 
 
-//Web server uses
-app.use(urlencodedParser);
 app.use(bodyParser.json());
+//Serve static files publicly
 app.use(express.static(path.join(__dirname + '/public')));
 
 //Get requests
@@ -184,6 +191,3 @@ app.post('/clearallUPC', (req,res) => {
             client.close();
     });
 });
-
-//Finally, start the server
-app.listen(8080, () => console.log('Listening on port 8080!'))
