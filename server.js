@@ -113,16 +113,6 @@ r.connect(config.rethinkdb, function(err, conn) {
             res.end();
         }
     });
-    //r.table('upcs').changes().run(conn, (err,cursor) => {
-    //    cursor.each((err,item)=>{
-    //        io.emit('upc_updated', item);
-    //    })
-    //});
-    //r.table('employees').changes().run(conn, (err,cursor) => {
-    //    cursor.each((err,item)=>{
-    //        io.emit('emp_updated', item);
-    //    })
-    //});
 });
 
 
