@@ -1,4 +1,17 @@
 $('document').ready(function(){
+    //Socket IO Client connection/Management
+    var socket = io.connect('http://localhost:3000');
+    socket.on('emp_updated', (data) => {
+        if(data.old_val == null){
+            var updateEMP = data.new_val.employee
+            $('#employeeList').append('<li ' + 'id=' + '"' + updateEMP + '"' + '>' + updateEMP + '</li>');
+            console.log(updateEMP + ' has been added!');
+        }else if (data.new_vall == null){
+            var updateEMP = data.old_val.employee
+            $('#' + updateEMP).remove();
+            console.log(updateEMP + ' has been removed!');
+        }
+    })
     window.history.pushState("Manager", "Manager","/Manager");
     $('#clearedHeader').html('');
     document.getElementById("toEmployee").onclick = function () {

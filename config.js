@@ -6,6 +6,6 @@ module.exports = {
         db: "inventory"
     },
     express: {
-        port: 80
+        port: 3000
     }
 }

@@ -6,8 +6,14 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
+
+//RethinkDB Requirements
+const r = require('rethinkdb');
+const config = require('./config')
+const databaseController = require('./controllers/databaseController');
+
 //Start the server
-const server = app.listen(80, () => console.log('Listening on port 80!'))
+const server = app.listen(config.express.port, () => console.log('Listening on port '+ config.express.port))
 
 //Express Web uses
 app.use(bodyParser.json());
@@ -26,10 +32,7 @@ io.on('connection', (socket) => {
 });
 
 
-//RethinkDB Requirements
-const r = require('rethinkdb');
-const config = require('./config')
-const databaseController = require('./controllers/databaseController');
+
 
 //RethinkDB Connection/Creation of DB and Table Monitoring
 r.connect(config.rethinkdb, function(err, conn) {
@@ -74,7 +77,6 @@ r.connect(config.rethinkdb, function(err, conn) {
                 if (err) throw err;
                 cursor.toArray((err,resu) => {
                     if (err) throw err;
-                    console.log(resu);
                     if (resu.length != 0) {
                     r.table('employees').filter({employee:employeeID}).delete().run(conn, (err, resu) => {
                         //Delete (log out)
