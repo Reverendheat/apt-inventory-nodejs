@@ -32,8 +32,6 @@ io.on('connection', (socket) => {
 });
 
 
-
-
 //RethinkDB Connection/Creation of DB and Table Monitoring
 r.connect(config.rethinkdb, function(err, conn) {
     if (err) {
@@ -66,6 +64,15 @@ r.connect(config.rethinkdb, function(err, conn) {
     }
     app.get('/employees', (req,res) => {
         r.table('employees').orderBy('date').run(conn, (err, cursor)=>{
+            if (err) throw err;
+            cursor.toArray((err,result)=>{
+                if (err) throw err;
+                res.send(result);
+            })
+        })
+    });
+    app.get('/upcs', (req,res) => {
+        r.table('upcs').orderBy('date').run(conn, (err, cursor)=>{
             if (err) throw err;
             cursor.toArray((err,result)=>{
                 if (err) throw err;
@@ -113,6 +120,53 @@ r.connect(config.rethinkdb, function(err, conn) {
             res.end();
         }
     });
+    app.post('/upcset', (req,res) => {
+        console.log(req.body.AcceptedUPC);
+        var acceptedupc = req.body.AcceptedUPC;
+        if (acceptedupc == '') {
+            console.log("You have not entered any UPC");
+            res.send('Empty');
+            res.end();
+        } else if (acceptedupc.includes(empSubString)) {
+            console.log('You are trying to enter an employee ID on the management screen, go back to the Employee Sign-in page');
+            res.send('EMP');
+            res.end();
+        } else {
+            //Try to find it
+            r.table('upcs').filter({AcceptedUPC:acceptedupc}).run(conn, (err, cursor) => {
+                if (err) throw err;
+                cursor.toArray((err,resu) => {
+                    if (err) throw err;
+                    if (resu.length != 0) {
+                    r.table('upcs').filter({AcceptedUPC:acceptedupc}).delete().run(conn, (err, resu) => {
+                        //Delete (log out)
+                        if (err) throw err;
+                        res.end();
+                        console.log(acceptedupc +' removed');
+                        });
+                    } else {
+                        //insert
+                        r.table('upcs').insert({AcceptedUPC:acceptedupc,date: new Date()}).run(conn, (err, resu) => {
+                            if (err) throw err;
+                            console.log(acceptedupc + ' inserted');
+                            res.status(200);
+                            res.end();
+                        });
+                    } 
+                });
+            }); 
+        }
+    });
+    app.post('/clearallEMP', (req,res) => {
+        r.table('employees').delete().run(conn,(err,resu) => {
+            console.log("Employees all signed out");
+        });
+    });
+    app.post('/clearallUPC', (req,res) => {
+        r.table('upcs').delete().run(conn, (err, resu) => {
+            console.log("Accepted UPCs have been cleared");
+        });
+    });
 });
 
 
@@ -123,95 +177,4 @@ app.get('/', (req,res) => {
 
 app.get('/Manager', (req,res) => {
     res.sendFile(path.join(__dirname + '/ManagerAccess.html'));
-});
-//get logged in employees
-
-
-//Get UPCs list
-app.get('/upcs', (req,res) => {
-    MongoClient.connect(url, (err,client) => {
-        if (err) throw err;
-        const db = client.db(dbName);
-        db.collection('upc').find({}).toArray((err, results) => {
-            if (err) throw err;
-            if (results.length == 0) {
-                console.log('No upcs have been set...')
-            } else {
-                //console.log(results);
-                res.send(results);
-            }
-            client.close;
-        });
-    });
-});
-
-//Post requests (forms)
-
-app.post('/upcset', (req,res) => {
-    console.log(req.body);
-    var acceptedupc = req.body.AcceptedUPC;
-    if (acceptedupc == '') {
-        console.log("You have not entered any UPC");
-        res.send('Empty');
-        res.end();
-    } else if (acceptedupc.includes(empSubString)) {
-        console.log('You are trying to enter an employee ID on the management screen, go back to the Employee Sign-in page');
-        res.send('EMP');
-        res.end();
-    } else {
-        //Try/Insert into Mongo
-        MongoClient.connect(url, (err,client)=>{
-            console.log('tried to connect');
-            if (err) throw err;
-            const db = client.db(dbName);
-            var upcObj = {AcceptedUPC : acceptedupc};
-            //Try to find it
-            db.collection('upc').findOne(upcObj, (err, resu) => {
-                //console.log(res);
-                if (err) throw err;
-                if (resu != null) {
-                    db.collection('upc').deleteOne(upcObj, (err, resu) => {
-                        //Delete
-                        if (err) throw err;
-                        console.log(acceptedupc + ' has been removed');
-                        client.close();
-                        res.send('Delete');
-                        res.end();
-                      });
-                } else {
-                        //insert
-                        db.collection('upc').insertOne(upcObj, (err, resu) => {
-                            if (err) throw err;
-                            console.log(acceptedupc + ' has been added to the list of accepted UPCs');
-                            client.close();
-                            res.status(200);
-                            res.send(acceptedupc);
-                            res.end();
-                        });
-                }
-            }); 
-        });
-    }
-});
-
-app.post('/clearallEMP', (req,res) => {
-    MongoClient.connect(url, (err,client)=>{
-            if (err) throw err;
-            const db = client.db(dbName);
-            db.collection('employees').remove({}, (err, numberRemoved) => {
-                console.log("Employees all signed out");
-            });
-            client.close();
-    });
-});
-
-app.post('/clearallUPC', (req,res) => {
-    MongoClient.connect(url, (err,client)=>{
-            if (err) throw err;
-            const db = client.db(dbName);
-            db.collection('upc').remove({}, (err, numberRemoved) => {
-                console.log("Accepted UPCs have been cleared");
-            });
-            client.close();
-    });
 });

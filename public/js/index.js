@@ -7,7 +7,7 @@ $('document').ready(function(){
             var updateEMP = data.new_val.employee
             $('#employeeList').append('<li ' + 'id=' + '"' + updateEMP + '"' + '>' + updateEMP + '</li>');
             console.log(updateEMP + ' has been added!');
-        }else if (data.new_vall == null){
+        }else if (data.new_val == null){
             var updateEMP = data.old_val.employee
             $('#' + updateEMP).remove();
             console.log(updateEMP + ' has been removed!');
