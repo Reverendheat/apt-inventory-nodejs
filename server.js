@@ -1,36 +1,116 @@
+//App specific variables
+const empSubString = 'EMP';
+
 //Express web server requirements
 const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
 //Start the server
-const server = app.listen(8080, () => console.log('Listening on port 8080!'))
+const server = app.listen(80, () => console.log('Listening on port 80!'))
+
+//Express Web uses
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname + '/public')));
 
 //Socket IO requirements
 const socket = require('socket.io');
 const io = socket(server);
-io.on('connection', (client) => {
-    console.log('A new friend has arrived from ' + client.request.connection.remoteAddress);
+
+//Socket IO Events
+io.on('connection', (socket) => {
+    console.log('A new friend has arrived from ' + socket.handshake.address);
+    socket.on('disconnect', () => {
+        console.log('Goodbye ' + socket.handshake.address + ' ):');
+    });
 });
 
-//MongoDB requirements
-const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017';
-const dbName = 'inventory';
-MongoClient.connect(url, (err,client)=>{
-    if (err) throw err;
-    console.log('Connected to Inventory db!');
-    const db = client.db(dbName);
-    client.close();
+
+//RethinkDB Requirements
+const r = require('rethinkdb');
+const config = require('./config')
+const databaseController = require('./controllers/databaseController');
+
+//RethinkDB Connection/Creation of DB and Table Monitoring
+r.connect(config.rethinkdb, function(err, conn) {
+    if (err) {
+        console.log('Could not open a connection to initialize the database: ' + err.message);
+    }
+    else {
+        console.log('Connected.');
+        app.set('rethinkdb.conn', conn);
+        databaseController.createDatabase(conn, config.rethinkdb.db)
+            .then(function() {
+                return databaseController.createTable(conn, 'employees');
+            }).then(function() {
+                return databaseController.createTable(conn, 'upcs');
+            })
+            .catch(function(err) {
+                console.log('Error connecting to RethinkDB: ' + err);
+            });
+    }
+    app.get('/employees', (req,res) => {
+        r.table('employees').orderBy('date').run(conn, (err, cursor)=>{
+            if (err) throw err;
+            cursor.toArray((err,result)=>{
+                if (err) throw err;
+                res.send(result);
+            })
+        })
+    });
+    app.post('/signin', (req,res) => {
+        var employeeID = req.body.employee;
+        console.log(employeeID);
+        if (employeeID == '') {
+            console.log("its empty");
+            res.send('Empty');
+            res.end();
+        } else if (employeeID.includes(empSubString)) {
+            //Try/Insert into ReThinkDB
+            var employeeObj = {employee : employeeID};
+            console.log(employeeObj);
+            //Try to find it
+            r.table('employees').filter({employee:employeeID}).run(conn, (err, cursor) => {
+                if (err) throw err;
+                cursor.toArray((err,resu) => {
+                    if (err) throw err;
+                    console.log(resu);
+                    if (resu.length != 0) {
+                    r.table('employees').filter({employee:employeeID}).delete().run(conn, (err, resu) => {
+                        //Delete (log out)
+                        if (err) throw err;
+                        res.end();
+                        console.log(employeeID +' logged out');
+                        });
+                    } else {
+                        //insert
+                        r.table('employees').insert({employee:employeeID,date: new Date()}).run(conn, (err, resu) => {
+                            if (err) throw err;
+                            console.log(employeeID + ' inserted');
+                            res.status(200);
+                            res.end();
+                        });
+                    } 
+                });
+            }); 
+        } else {
+            res.send("Invalid");
+            console.log('They entered have entered an invalid Employee ID');
+            res.end();
+        }
+    });
+    r.table('upcs').changes().run(conn, (err,cursor) => {
+        cursor.each((err,item)=>{
+            io.emit('upc_updated', item);
+        })
+    });
+    r.table('employees').changes().run(conn, (err,cursor) => {
+        cursor.each((err,item)=>{
+            io.emit('emp_updated', item);
+        })
+    });
 });
 
-//App specific variables
-const empSubString = 'EMP';
-
-
-app.use(bodyParser.json());
-//Serve static files publicly
-app.use(express.static(path.join(__dirname + '/public')));
 
 //Get requests
 app.get('/', (req,res) => {
@@ -41,22 +121,8 @@ app.get('/Manager', (req,res) => {
     res.sendFile(path.join(__dirname + '/ManagerAccess.html'));
 });
 //get logged in employees
-app.get('/employees', (req,res) => {
-    MongoClient.connect(url, (err,client) => {
-        if (err) throw err;
-        const db = client.db(dbName);
-        db.collection('employees').find({}).toArray((err, results) => {
-            if (err) throw err;
-            if (results.length == 0) {
-                console.log('No one is signed in...')
-            } else {
-                //console.log(results);
-                res.send(results);
-            }
-            client.close;
-        });
-    });
-});
+
+
 //Get UPCs list
 app.get('/upcs', (req,res) => {
     MongoClient.connect(url, (err,client) => {
@@ -76,51 +142,6 @@ app.get('/upcs', (req,res) => {
 });
 
 //Post requests (forms)
-app.post('/signin', (req,res) => {
-    console.log(req.body);
-    var employeeID = req.body.employee;
-    if (employeeID == '') {
-        console.log("its empty");
-        res.send('Empty');
-        res.end();
-    } else if (employeeID.includes(empSubString)) {
-        //Try/Insert into Mongo
-        MongoClient.connect(url, (err,client)=>{
-            if (err) throw err;
-            const db = client.db(dbName);
-            var employeeObj = {employee : employeeID};
-            //Try to find it
-            db.collection('employees').findOne(employeeObj, (err, resu) => {
-                if (err) throw err;
-                if (resu != null) {
-                    db.collection('employees').deleteOne(employeeObj, (err, resu) => {
-                        //Delete (log out)
-                        if (err) throw err;
-                        res.send('Delete');
-                        res.end();
-                        console.log(employeeID +' logged out');
-                        client.close();
-                      });
-                } else {
-                        //insert
-                        db.collection('employees').insertOne(employeeObj, (err, resu) => {
-                            if (err) throw err;
-                            console.log(employeeID + ' inserted');
-                            client.close();
-                            res.status(200);
-                            res.send(employeeID);
-                            res.end();
-                        });
-                }
-            }); 
-        });
-    } else {
-        res.send("Invalid");
-        console.log('You have entered an invalid Employee ID');
-        res.end();
-    }
-    //res.sendFile(path.join(__dirname + '/index.html'));
-});
 
 app.post('/upcset', (req,res) => {
     console.log(req.body);
@@ -167,7 +188,6 @@ app.post('/upcset', (req,res) => {
             }); 
         });
     }
-    //res.sendFile(path.join(__dirname + '/ManagerAccess.html'));
 });
 
 app.post('/clearallEMP', (req,res) => {

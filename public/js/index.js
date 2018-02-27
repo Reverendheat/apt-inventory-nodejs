@@ -1,9 +1,20 @@
 $('document').ready(function(){
 
-    //Socket IO Client connection
-    var socket = io.connect('http://localhost:8080');
+    //Socket IO Client connection/Management
+    var socket = io.connect('http://localhost:80');
+    socket.on('emp_updated', (data) => {
+        if(data.old_val == null){
+            var updateEMP = data.new_val.employee
+            $('#employeeList').append('<li ' + 'id=' + '"' + updateEMP + '"' + '>' + updateEMP + '</li>');
+            console.log(updateEMP + ' has been added!');
+        }else if (data.new_vall == null){
+            var updateEMP = data.old_val.employee
+            $('#' + updateEMP).remove();
+            console.log(updateEMP + ' has been removed!');
+        }
+    })
 
-    //Function for getting employees
+    //Function for getting employees initially
     function getEmpData() {
         $.get('employees', (data) => {
             data.forEach(element => {
@@ -38,12 +49,6 @@ $('document').ready(function(){
                 console.log('You have entered an invalid Employee ID');
             } else if(result == 'Empty') {
                 console.log('The field is empty...');
-            } else if(result == 'Delete') {
-                $('#'+empInput).remove();
-                console.log(empInput + " was deleted");
-            } else {
-                $('#employeeList').append('<li ' + 'id=' + '"' + result + '"' + '>' + result + '</li>');
-                console.log(empInput + ' has been added');
             }
         });
     });
