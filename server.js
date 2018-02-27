@@ -47,6 +47,18 @@ r.connect(config.rethinkdb, function(err, conn) {
                 return databaseController.createTable(conn, 'employees');
             }).then(function() {
                 return databaseController.createTable(conn, 'upcs');
+            }).then(()=>{
+                r.table('upcs').changes().run(conn, (err,cursor) => {
+                    cursor.each((err,item)=>{
+                        io.emit('upc_updated', item);
+                    })
+                });
+            }).then(()=> {
+                    r.table('employees').changes().run(conn, (err,cursor) => {
+                    cursor.each((err,item)=>{
+                    io.emit('emp_updated', item);
+                    })
+                });
             })
             .catch(function(err) {
                 console.log('Error connecting to RethinkDB: ' + err);
@@ -101,16 +113,16 @@ r.connect(config.rethinkdb, function(err, conn) {
             res.end();
         }
     });
-    r.table('upcs').changes().run(conn, (err,cursor) => {
-        cursor.each((err,item)=>{
-            io.emit('upc_updated', item);
-        })
-    });
-    r.table('employees').changes().run(conn, (err,cursor) => {
-        cursor.each((err,item)=>{
-            io.emit('emp_updated', item);
-        })
-    });
+    //r.table('upcs').changes().run(conn, (err,cursor) => {
+    //    cursor.each((err,item)=>{
+    //        io.emit('upc_updated', item);
+    //    })
+    //});
+    //r.table('employees').changes().run(conn, (err,cursor) => {
+    //    cursor.each((err,item)=>{
+    //        io.emit('emp_updated', item);
+    //    })
+    //});
 });
 
 
