@@ -1,16 +1,22 @@
 $('document').ready(function(){
 
     //Socket IO Client connection/Management
-    var socket = io.connect('http://10.51.4.158:3000');
+    var socket = io.connect('http://localhost:3000');
     socket.on('emp_updated', (data) => {
         if(data.old_val == null){
             var updateEMP = data.new_val.employee
-            $('#employeeList').append('<li ' + 'id=' + '"' + updateEMP + '"' + '>' + updateEMP + '</li>');
+            $('#employeeList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + updateEMP + '"' + '>' + updateEMP + '</li>');
             console.log(updateEMP + ' has been added!');
+            $('#statusH3').html(updateEMP + ' logged in').css('color','green').fadeIn('slow', () => {
+                $("#statusH3").delay(1000).fadeOut('slow');
+            });
         }else if (data.new_val == null){
             var updateEMP = data.old_val.employee
             $('#' + updateEMP).remove();
             console.log(updateEMP + ' has been removed!');
+            $('#statusH3').html(updateEMP + ' logged out').css('color','red').fadeIn('slow', () => {
+                $("#statusH3").delay(1000).fadeOut('slow');
+            });
         }
     })
 
@@ -18,7 +24,7 @@ $('document').ready(function(){
     function getEmpData() {
         $.get('employees', (data) => {
             data.forEach(element => {
-                $('#employeeList').append('<li ' + 'id=' + '"' + element.employee + '"' + '>' + element.employee + '</li>');
+                $('#employeeList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + element.employee + '"' + '>' + element.employee + '</li>');
                 console.log(element.employee + ' has been added!');
             });
         });
