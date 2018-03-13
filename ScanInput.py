@@ -1,4 +1,5 @@
 import rethinkdb as r
+import datetime
 
 hostname = 'localhost'
 port = '28015'
@@ -12,6 +13,15 @@ def getUPC():
     cursor = list(cursor)
     if cursor != []:
         print('UPC Scanned')
+        sqlTime = datetime.datetime.now()
+        sqlTimeFormatted = "{:%m-%d-%Y %I:%M:%S%p}".format(sqlTime)
+        filename = "Scans"  + sqlTimeFormatted + ".csv"
+        print ("Scanned at {:%m-%d-%Y %I:%M:%S%p}".format(sqlTime))
+        f = open(filename, 'w')
+        for item in cursor:
+            f.write("UPC Scanned" + ',' + "Date Entered" + '\n')
+            f.write(item['AcceptedUPC'] + ',' + sqlTimeFormatted + '\n')
+        f.close()
     else:
         print(scan + ' not found, please set via the Manager website')
 

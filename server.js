@@ -1,6 +1,12 @@
 //App specific variables
 const empSubString = 'EMP';
 
+//File System requirements
+const fs = require('fs');
+
+//Date time requirements
+const moment = require('moment');
+
 //Express web server requirements
 const express = require('express');
 const app = express();
@@ -107,6 +113,8 @@ r.connect(config.rethinkdb, function(err, conn) {
                         //insert
                         r.table('employees').insert({employee:employeeID,date: new Date()}).run(conn, (err, resu) => {
                             if (err) throw err;
+                            
+                            fs.appendFile();
                             console.log(employeeID + ' inserted');
                             res.status(200);
                             res.end();
