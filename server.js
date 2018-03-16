@@ -112,9 +112,8 @@ r.connect(config.rethinkdb, function(err, conn) {
                     } else {
                         //insert
                         r.table('employees').insert({employee:employeeID,date: new Date()}).run(conn, (err, resu) => {
-                            if (err) throw err;
-                            
-                            fs.appendFile();
+                            if (err) throw err
+                            //fs.appendFile();
                             console.log(employeeID + ' inserted');
                             res.status(200);
                             res.end();
