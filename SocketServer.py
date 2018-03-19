@@ -4,6 +4,7 @@ import sys
 import rethinkdb as r
 import datetime
 
+#Rethink connection
 hostname = 'localhost'
 port = '28015'
 db = 'inventory'
@@ -33,14 +34,15 @@ while True:
         while True:
             data = connection.recv(16)
             print('received {!r}'.format(data))
-            if data == b'UPC100\r\n':
+            cursor = r.db(db).table("upcs").filter(r.row["AcceptedUPC"] == data).run()
+            cursor = list(cursor)
+            if cursor != []:
                 print('Scanned!')
                 connection.sendall(data)
                 test = "NICE YOU SCANNED IT\n"
                 connection.sendall(test.encode())
             else:
-                print('UPC Incorrect!', client_address)
-                print("Hello")
+                print('UPC not found....', client_address)
 
     finally:
         # Clean up the connection

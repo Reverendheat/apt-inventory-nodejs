@@ -14,8 +14,9 @@ def getUPC():
     if cursor != []:
         print('UPC Scanned')
         sqlTime = datetime.datetime.now()
+        fileNameFormatted = "{:%m-%d-%Y %I%M%S%p}".format(sqlTime)
         sqlTimeFormatted = "{:%m-%d-%Y %I:%M:%S%p}".format(sqlTime)
-        filename = "Scans"  + sqlTimeFormatted + ".csv"
+        filename = "Scans"  + fileNameFormatted + ".csv"
         print ("Scanned at {:%m-%d-%Y %I:%M:%S%p}".format(sqlTime))
         f = open(filename, 'w')
         for item in cursor:
