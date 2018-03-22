@@ -7,6 +7,12 @@ const fs = require('fs');
 //Date time requirements
 const moment = require('moment');
 
+//Net Server for TCP Connections
+const net = require('net');
+const netHOST = 'localhost';
+const netPORT = 4040;
+const netserver = net.createServer();
+
 //Express web server requirements
 const express = require('express');
 const app = express();
@@ -36,7 +42,6 @@ io.on('connection', (socket) => {
         console.log('Goodbye ' + socket.handshake.address + ' ):');
     });
 });
-
 
 //RethinkDB Connection/Creation of DB and Table Monitoring
 r.connect(config.rethinkdb, function(err, conn) {
@@ -174,8 +179,31 @@ r.connect(config.rethinkdb, function(err, conn) {
             console.log("Accepted UPCs have been cleared");
         });
     });
-});
+    netserver.listen(netPORT, netHOST);
 
+    netserver.on('connection', function(sock) {
+        console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
+        console.log('Server listening on ' + netserver.address().address +':' + netserver.address().port);
+        sock.on('data', function(data){
+            sock.write('You said ' + data);
+            data = data.toString('utf-8');
+            data = data.trim();
+            r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
+                if (err) throw err;
+                console.log(data);
+                cursor.toArray((err,resu) => {
+                    if (err) throw err;
+                    console.log(resu);
+                    if (resu.length != 0) {
+                        sock.write('I Found it!!!');
+                    } else {
+                        sock.write('no dice...')
+                    }
+                })    
+            })
+        })
+    }).listen(netPORT, netHOST);
+});
 
 //Get requests
 app.get('/', (req,res) => {
@@ -185,3 +213,4 @@ app.get('/', (req,res) => {
 app.get('/Manager', (req,res) => {
     res.sendFile(path.join(__dirname + '/ManagerAccess.html'));
 });
+
