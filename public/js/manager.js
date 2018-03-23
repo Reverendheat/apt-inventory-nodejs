@@ -36,7 +36,7 @@ function empDelete(atag){
 }
 $('document').ready(function(){
     //Socket IO Client connection/Management
-    var socket = io.connect('http://localhost:3000');
+    var socket = io.connect('http://10.79.4.67:3000');
     //Check for upc updates
     socket.on('upc_updated', (data) => {
         if(data.old_val == null){

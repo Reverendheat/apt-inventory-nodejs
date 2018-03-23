@@ -4,13 +4,19 @@ const empSubString = 'EMP';
 //File System requirements
 const fs = require('fs');
 
+//Fast-CSV requiremnts
+const csv = require('fast-csv')
+
+//UUID requirements
+const uuidv4 = require('uuid/v4');
+
 //Date time requirements
 const moment = require('moment');
 
 //Net Server for TCP Connections
 const net = require('net');
-const netHOST = 'localhost';
-const netPORT = 4040;
+const netHOST = '';
+const netPORT = 10000;
 const netserver = net.createServer();
 
 //Express web server requirements
@@ -196,11 +202,22 @@ r.connect(config.rethinkdb, function(err, conn) {
                     console.log(resu);
                     if (resu.length != 0) {
                         sock.write('I Found it!!!');
+                        var now = moment().format("MM/DD/YYYY hh:mm:ss A")
+                        var uid = uuidv4();
+                        var ws = fs.createWriteStream("csv/Scans" + uid + ".csv");
+                        csv
+                            .write([
+                                [data, now]
+                            ], {headers: true})
+                            .pipe(ws);
                     } else {
                         sock.write('no dice...')
                     }
-                })    
+                })
             })
+        })
+        sock.on('close', function(data) {
+            console.log("Goodbye, " + sock.remoteAddress +':'+ sock.remotePort)
         })
     }).listen(netPORT, netHOST);
 });

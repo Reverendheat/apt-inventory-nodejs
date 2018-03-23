@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "C:\\Users\\sharp\\AppData\\Local\\Programs\\Python\\Python36-32\\python.exe"
+    "python.pythonPath": "C:\\Users\\adbs\\AppData\\Local\\Programs\\Python\\Python36-32\\python.exe",
+    "python.linting.enabled": false
 }

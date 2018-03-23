@@ -1,0 +1,1 @@
+robocopy *.csv "C:\APT Inventory Scanning\aptinventorynodejs\csv" "\\newmas\Sage 100 Advanced\Inventory Scanning\\" /MOVE /E

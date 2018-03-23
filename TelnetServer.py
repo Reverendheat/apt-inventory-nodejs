@@ -26,13 +26,17 @@ while True:
         print('client connected:', client_address)
         while True:
             data = connection.recv(2048)
-            #print('received {!r}'.format(data))
+            print('received {!r}'.format(data))
             if data:
                 try:
                     if data.decode() == "\r\n":
                         raise Exception
-                    cursor = r.db(db).table("upcs").filter(r.row["AcceptedUPC"] == data.decode('utf-8')).run()
+                    data = (data.decode('utf-8'))
+                    print(data)
+                    cursor = r.db(db).table("upcs").filter(r.row["AcceptedUPC"] == data).run()
+                    print(cursor)
                     cursor = list(cursor)
+                    print(cursor)
                     if cursor != []:
                         sqlTime = datetime.datetime.now()
                         fileNameFormatted = "{:%m-%d-%Y %I%M%S%p}".format(sqlTime)
@@ -48,10 +52,12 @@ while True:
                             f.close()
                     else:
                         bad_message = 'UPC not found..' + '\n'
+                        print(data.decode('utf-8') + fileNameFormatted)
                         print(bad_message)
                         connection.sendall(bad_message.encode())
                 except:
                     pass
+                    print("Exception was raised...")
             else:
                 break
     finally:
