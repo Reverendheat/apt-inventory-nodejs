@@ -3,6 +3,7 @@ const empSubString = 'EMP';
 
 //File System requirements
 const fs = require('fs');
+const csvFolder = './csv';
 
 //Fast-CSV requiremnts
 const csv = require('fast-csv')
@@ -27,6 +28,12 @@ const bodyParser = require('body-parser');
 const r = require('rethinkdb');
 const config = require('./config')
 const databaseController = require('./controllers/databaseController');
+
+//Create the CSV folder if it doesn't exist
+if (!fs.existsSync(csvFolder)) {
+    fs.mkdirSync(folder);
+    console.log('I made the csv folder for you');
+}
 
 //Start the server
 const server = app.listen(config.express.port, () => console.log('Listening on port '+ config.express.port))
