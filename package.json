@@ -1,0 +1,26 @@
+{
+  "name": "aptinventory",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "prestart-osx": "mongod --dbpath data/ --fork --logpath=/Users/brandonsharp/Desktop/Inventorydb.log",
+    "prestart-win": "mongod.exe --dbpath data",
+    "start": "node server.js",
+    "poststop": "mongo admin --eval 'db.shutdownServer()'"
+  },
+  "author": "CaptainKoopa",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "fast-csv": "^2.4.1",
+    "moment": "^2.21.0",
+    "nodemon": "^1.17.2",
+    "rethinkdb": "^2.3.3",
+    "rethinkdbdash": "^2.3.31",
+    "socket.io": "^2.0.4",
+    "uuid": "^3.2.1"
+  }
+}

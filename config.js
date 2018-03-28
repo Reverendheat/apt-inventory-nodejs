@@ -7,5 +7,9 @@ module.exports = {
     },
     express: {
         port: 3000
+    },
+    netserver: {
+        host: "",
+        port: 10000,
     }
 }

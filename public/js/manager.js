@@ -36,16 +36,25 @@ function empDelete(atag){
 }
 $('document').ready(function(){
     //Socket IO Client connection/Management
-    var socket = io.connect('http://10.79.4.67:3000');
-    //Check for upc updates
+    var socket = io.connect('http://localhost:3000');
+    //Listen for upc updates
     socket.on('upc_updated', (data) => {
         if(data.old_val == null){
             var updateUPC = data.new_val.AcceptedUPC;
-            $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + updateUPC + '"' + '>' + updateUPC + '<a href="#" onclick="upcDelete(this)" class="deleteItem">' +'<span class="badge badge-danger">X</span>' + '</a>' + '</li>');
-            console.log(updateUPC + ' added');
-            $('#statusH3').html(updateUPC + ' added').css('color','green').fadeIn('slow', () => {
-                $("#statusH3").delay(1000).fadeOut('slow');
-            });
+            if (data.new_val.UPCCount) {
+                upcCountList = data.new_val.UPCCount;
+                $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + updateUPC + '"' + '>' + updateUPC + '<a href="#" onclick="upcDelete(this)" class="deleteItem">' + '<span class="badge badge-danger">X</span>' + '</a>' + '<span>' + upcCountList + '</span>' + '</li>');
+                console.log(updateUPC + ' added');
+                $('#statusH3').html(updateUPC + ' added').css('color','green').fadeIn('slow', () => {
+                    $("#statusH3").delay(1000).fadeOut('slow');
+                });
+            } else {
+                $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + updateUPC + '"' + '>' + updateUPC +  '<a href="#" onclick="upcDelete(this)" class="deleteItem">' +'<span class="badge badge-danger">X</span>' + '</a>' + '</li>');
+                console.log(updateUPC + ' added');
+                $('#statusH3').html(updateUPC + ' added').css('color','green').fadeIn('slow', () => {
+                    $("#statusH3").delay(1000).fadeOut('slow');
+                });
+            }
         }else if (data.new_val == null){
             var updateUPC = data.old_val.AcceptedUPC;
             $('#' + updateUPC).remove();
@@ -55,7 +64,11 @@ $('document').ready(function(){
             });
         }
     })
-    //Check for employee updates
+    //Listen for Scans
+    socket.on('UPCScanned', (data) => {
+        console.log(data + ' was scanned!');
+    });
+    //Listen for employee updates
     socket.on('emp_updated', (data) => {
         if(data.old_val == null){
             var updateEMP = data.new_val.employee
@@ -85,8 +98,20 @@ $('document').ready(function(){
     $('#upcSubmit').on('click', (event)=>{
         event.preventDefault();
         event.stopPropagation();
+        var upcCount = prompt('Please enter the amount you would like to create, leaving this blank will disable the countdown feature');
+        if (isNaN(upcCount)) {
+            alert("Thats not a number, please try again.");
+            console.log("Thats not a number, please try again.")
+            $('#upcInput').val('');
+            return;
+        } else {
+            upcCount = Number(upcCount);
+            console.log(typeof upcCount);
+        }
         var upcInput = $('#upcInput').val()
-        var upcObj = {AcceptedUPC : upcInput};
+        var upcObj = {AcceptedUPC : upcInput, UPCCount : upcCount};
+        console.log("Count is set to " + upcCount + " for " + upcInput)
+
         $('#upcInput').val('');
         $.ajax({
             url:'/upcset',
@@ -139,9 +164,18 @@ $('document').ready(function(){
     });
 
     $.get('upcs', (data) => {
+        console.log(data);
         data.forEach(element => {
-            $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + element.AcceptedUPC + '"' + '>' + element.AcceptedUPC + '<a href="#" onclick="upcDelete(this)" class="deleteItem">' +'<span class="badge badge-danger">X</span>' + '</a>' + '</li>');
-            console.log('<li>' + element.AcceptedUPC + '</li>');
+            if (element.UPCCount) {
+                console.log(element.AcceptedUPC + " has counts!");
+                $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + element.AcceptedUPC + '"' + '>' + element.AcceptedUPC + '<a href="#" onclick="upcDelete(this)" class="deleteItem">' +'<span class="badge badge-danger">X</span>' + '</a>' + '<span>' + element.UPCCount + '</span>' + '</li>');
+                console.log('<li>' + element.AcceptedUPC + '</li>');
+            } else {
+                console.log(element.AcceptedUPC + " does not have counts ):")
+                $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + element.AcceptedUPC + '"' + '>' + element.AcceptedUPC + '<a href="#" onclick="upcDelete(this)" class="deleteItem">' +'<span class="badge badge-danger">X</span>' + '</a>' + '</li>');
+                console.log('<li>' + element.AcceptedUPC + '</li>');
+            }
+
         });
     });
 

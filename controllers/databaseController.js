@@ -1,5 +1,6 @@
 var Promise = require('bluebird');
 var r = require('rethinkdb');
+//var r = require('rethinkdbdash')();
 
 module.exports.createDatabase = (conn, databaseName) => {
 	return r.dbList().run(conn).then((list) => {

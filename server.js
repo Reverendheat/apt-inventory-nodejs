@@ -15,8 +15,6 @@ const moment = require('moment');
 
 //Net Server for TCP Connections
 const net = require('net');
-const netHOST = '';
-const netPORT = 10000;
 const netserver = net.createServer();
 
 //Express web server requirements
@@ -27,6 +25,7 @@ const bodyParser = require('body-parser');
 
 //RethinkDB Requirements
 const r = require('rethinkdb');
+//const r = require('rethinkdbdash')();
 const config = require('./config')
 const databaseController = require('./controllers/databaseController');
 
@@ -48,6 +47,7 @@ io.on('connection', (socket) => {
         console.log('Goodbye ' + socket.handshake.address + ' ):');
     });
 });
+
 
 //RethinkDB Connection/Creation of DB and Table Monitoring
 r.connect(config.rethinkdb, function(err, conn) {
@@ -140,7 +140,9 @@ r.connect(config.rethinkdb, function(err, conn) {
     });
     app.post('/upcset', (req,res) => {
         console.log(req.body.AcceptedUPC);
+        console.log(req.body.UPCCount);
         var acceptedupc = req.body.AcceptedUPC;
+        var upcCount = req.body.UPCCount;
         if (acceptedupc == '') {
             console.log("You have not entered any UPC");
             res.send('Empty');
@@ -164,12 +166,21 @@ r.connect(config.rethinkdb, function(err, conn) {
                         });
                     } else {
                         //insert
-                        r.table('upcs').insert({AcceptedUPC:acceptedupc,date: new Date()}).run(conn, (err, resu) => {
-                            if (err) throw err;
-                            console.log(acceptedupc + ' inserted');
-                            res.status(200);
-                            res.end();
-                        });
+                        if (upcCount == 0) {
+                            r.table('upcs').insert({AcceptedUPC:acceptedupc,date: new Date()}).run(conn, (err, resu) => {
+                                if (err) throw err;
+                                console.log(acceptedupc + ' inserted');
+                                res.status(200);
+                                res.end();
+                            });
+                        } else {
+                            r.table('upcs').insert({AcceptedUPC:acceptedupc,date: new Date(),UPCCount:upcCount}).run(conn, (err, resu) => {
+                                if (err) throw err;
+                                console.log(acceptedupc + ' inserted');
+                                res.status(200);
+                                res.end();
+                            });
+                        }
                     } 
                 });
             }); 
@@ -185,8 +196,7 @@ r.connect(config.rethinkdb, function(err, conn) {
             console.log("Accepted UPCs have been cleared");
         });
     });
-    netserver.listen(netPORT, netHOST);
-
+    //netserver.listen(netPORT, netHOST);
     netserver.on('connection', function(sock) {
         console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
         console.log('Server listening on ' + netserver.address().address +':' + netserver.address().port);
@@ -201,7 +211,14 @@ r.connect(config.rethinkdb, function(err, conn) {
                     if (err) throw err;
                     console.log(resu);
                     if (resu.length != 0) {
-                        sock.write('I Found it!!!');
+                        if (resu[0].UPCCount != null) {
+                            console.log('Its there!');
+                            r.table('upcs').update()
+                        } else {
+                            console.log('its not there ):');
+                        }
+                        io.emit("UPCScanned",data);
+                        sock.write('I Found it!');
                         var now = moment().format("MM/DD/YYYY hh:mm:ss A")
                         var uid = uuidv4();
                         var ws = fs.createWriteStream("csv/Scans" + uid + ".csv");
@@ -215,11 +232,16 @@ r.connect(config.rethinkdb, function(err, conn) {
                     }
                 })
             })
+/*             r.table('upcs').filter({AcceptedUPC:data}).filter(r.row.hasFields("UPCCount")).update({UPCCount: r.row("UPCCount").sub(1)}).run(conn, (err,cursor) => {
+                if (err) throw err;
+                console.log(cursor); 
+                return cursor;
+            }); */
         })
         sock.on('close', function(data) {
             console.log("Goodbye, " + sock.remoteAddress +':'+ sock.remotePort)
         })
-    }).listen(netPORT, netHOST);
+    }).listen(config.netserver.port, config.netserver.host);
 });
 
 //Get requests
