@@ -55,16 +55,22 @@ $('document').ready(function(){
                     $("#statusH3").delay(1000).fadeOut('slow');
                 });
             }
-        }else if (data.new_val == null){
+        } else if (data.new_val == null){
             var updateUPC = data.old_val.AcceptedUPC;
             $('#' + updateUPC).remove();
             console.log(updateUPC + ' removed');
             $('#statusH3').html(updateUPC + ' removed').css('color','red').fadeIn('slow', () => {
                 $("#statusH3").delay(1000).fadeOut('slow');
             });
+        } else if (data.new_val.UPCCount != null && data.new_val != null) {
+            var upcCountList = data.new_val.UPCCount;
+            var updateUPC = data.new_val.AcceptedUPC;
+            console.log('trying to update');
+            $('#' + updateUPC).html(updateUPC + '<a href="#" onclick="upcDelete(this)" class="deleteItem">' + '<span class="badge badge-danger">X</span>' + '</a>' + '<span>' + upcCountList + '</span>');
+            console.log('Count updated');
         }
     })
-    //Listen for Scans
+    //Listen for Scans (Debug)
     socket.on('UPCScanned', (data) => {
         console.log(data + ' was scanned!');
     });
@@ -98,20 +104,25 @@ $('document').ready(function(){
     $('#upcSubmit').on('click', (event)=>{
         event.preventDefault();
         event.stopPropagation();
-        var upcCount = prompt('Please enter the amount you would like to create, leaving this blank will disable the countdown feature');
-        if (isNaN(upcCount)) {
-            alert("Thats not a number, please try again.");
-            console.log("Thats not a number, please try again.")
-            $('#upcInput').val('');
-            return;
-        } else {
-            upcCount = Number(upcCount);
-            console.log(typeof upcCount);
-        }
         var upcInput = $('#upcInput').val()
+        console.log($('#'+upcInput).length);
+        if ($('#'+upcInput).length == 1){
+            console.log("It exists")
+        } else {
+            console.log('M8 its no theer!')
+            var upcCount = prompt('Please enter the amount you would like to create, leaving this blank will disable the countdown feature');
+            if (isNaN(upcCount)) {
+                alert("Thats not a number, please try again.");
+                console.log("Thats not a number, please try again.")
+                $('#upcInput').val('');
+                return;
+            } else {
+                upcCount = Number(upcCount);
+                console.log(typeof upcCount);
+            }
+        }
         var upcObj = {AcceptedUPC : upcInput, UPCCount : upcCount};
         console.log("Count is set to " + upcCount + " for " + upcInput)
-
         $('#upcInput').val('');
         $.ajax({
             url:'/upcset',

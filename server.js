@@ -25,7 +25,6 @@ const bodyParser = require('body-parser');
 
 //RethinkDB Requirements
 const r = require('rethinkdb');
-//const r = require('rethinkdbdash')();
 const config = require('./config')
 const databaseController = require('./controllers/databaseController');
 
@@ -66,6 +65,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                 r.table('upcs').changes().run(conn, (err,cursor) => {
                     cursor.each((err,item)=>{
                         io.emit('upc_updated', item);
+                        console.log("something happened")
                     })
                 });
             }).then(()=> {
@@ -213,7 +213,6 @@ r.connect(config.rethinkdb, function(err, conn) {
                     if (resu.length != 0) {
                         if (resu[0].UPCCount != null) {
                             console.log('Its there!');
-                            r.table('upcs').update()
                         } else {
                             console.log('its not there ):');
                         }
@@ -231,12 +230,11 @@ r.connect(config.rethinkdb, function(err, conn) {
                         sock.write('no dice...')
                     }
                 })
-            })
-/*             r.table('upcs').filter({AcceptedUPC:data}).filter(r.row.hasFields("UPCCount")).update({UPCCount: r.row("UPCCount").sub(1)}).run(conn, (err,cursor) => {
+            }).then(
+             r.table('upcs').filter({AcceptedUPC:data}).filter(r.row.hasFields("UPCCount")).update({UPCCount: r.row("UPCCount").sub(1)}).run(conn, (err,cursor) => {
                 if (err) throw err;
-                console.log(cursor); 
-                return cursor;
-            }); */
+                console.log(cursor);
+            }));
         })
         sock.on('close', function(data) {
             console.log("Goodbye, " + sock.remoteAddress +':'+ sock.remotePort)
