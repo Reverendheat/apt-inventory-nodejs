@@ -37,6 +37,10 @@ $('document').ready(function(){
     document.getElementById("toManager").onclick = function () {
         window.location = "Manager";
     };
+    //Click event to status screen
+    document.getElementById("toStatus").onclick = function () {
+        window.location = "Status";
+    };
 
     //POST to DB
     $('#employeeSubmit').on('click', (event)=>{

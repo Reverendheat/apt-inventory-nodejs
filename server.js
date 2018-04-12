@@ -72,7 +72,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                 r.table('upcs').changes().run(conn, (err,cursor) => {
                     cursor.each((err,item)=>{
                         io.emit('upc_updated', item);
-                        console.log("something happened")
+                        //console.log("something happened")
                     })
                 });
             }).then(()=> {
@@ -97,6 +97,15 @@ r.connect(config.rethinkdb, function(err, conn) {
     });
     app.get('/upcs', (req,res) => {
         r.table('upcs').orderBy('date').run(conn, (err, cursor)=>{
+            if (err) throw err;
+            cursor.toArray((err,result)=>{
+                if (err) throw err;
+                res.send(result);
+            })
+        })
+    });
+    app.get('/upccounts', (req,res) => {
+        r.table('upcs').filter(r.row.hasFields('UPCCount')).orderBy('date').run(conn, (err, cursor)=>{
             if (err) throw err;
             cursor.toArray((err,result)=>{
                 if (err) throw err;
@@ -145,6 +154,33 @@ r.connect(config.rethinkdb, function(err, conn) {
             res.end();
         }
     });
+    app.post('/upcchange', (req,res) => {
+        console.log(req.body.AcceptedUPC);
+        console.log(req.body.UPCCount);
+        var acceptedupc = req.body.AcceptedUPC;
+        var upcCount = req.body.UPCCount;
+        r.table('upcs').filter({AcceptedUPC:acceptedupc}).filter(r.row.hasFields("UPCCount")).run(conn, (err,cursor) => {
+            if (err) throw err;
+            cursor.toArray((err,resu) => {
+                if (err) throw err;
+                if (upcCount == 0) {
+                    r.table('upcs').filter({AcceptedUPC:acceptedupc}).replace(r.row.without('UPCCount')).run(conn, (err, resu) => {
+                        if (err) throw err;
+                        console.log(acceptedupc + ' count has been removed because it was set to 0 on the manager screen');
+                        res.send(upcCount.toString());
+                        res.end();
+                    });
+                } else {
+                    r.table('upcs').filter({AcceptedUPC:acceptedupc}).update({UPCCount: upcCount}).run(conn, (err, resu) => {
+                        if (err) throw err;
+                        console.log(acceptedupc + ' count has been updated to ' + upcCount);
+                        res.send(upcCount.toString());
+                        res.end();
+                    });
+                }
+            });
+        });
+    });
     app.post('/upcset', (req,res) => {
         console.log(req.body.AcceptedUPC);
         console.log(req.body.UPCCount);
@@ -165,7 +201,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                 cursor.toArray((err,resu) => {
                     if (err) throw err;
                     if (resu.length != 0) {
-                    r.table('upcs').filter({AcceptedUPC:acceptedupc}).delete().run(conn, (err, resu) => {
+                        r.table('upcs').filter({AcceptedUPC:acceptedupc}).delete().run(conn, (err, resu) => {
                         //Delete (log out)
                         if (err) throw err;
                         res.end();
@@ -219,9 +255,15 @@ r.connect(config.rethinkdb, function(err, conn) {
                     console.log(resu);
                     if (resu.length != 0) {
                         if (resu[0].UPCCount != null) {
-                            console.log('Its there!');
+                            console.log('There is a count on this record, and the value is ' + resu[0].UPCCount );
+                            if (resu[0].UPCCount == 1) {
+                                r.table('upcs').filter({AcceptedUPC:data}).delete().run(conn, (err, resu) => {
+                                    if (err) throw err;
+                                    console.log('Entry removed because the countdown reached 0');
+                                });
+                            }
                         } else {
-                            console.log('its not there ):');
+                            console.log('There is no count on this record');
                         }
                         io.emit("UPCScanned",data);
                         sock.write('I Found it!');
@@ -257,4 +299,10 @@ app.get('/', (req,res) => {
 app.get('/Manager', (req,res) => {
     res.sendFile(path.join(__dirname + '/ManagerAccess.html'));
 });
+
+//Get requests
+app.get('/Status', (req,res) => {
+    res.sendFile(path.join(__dirname + '/Status.html'));
+});
+
 

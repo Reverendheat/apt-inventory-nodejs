@@ -1,4 +1,18 @@
 span{
-    display: block;
+    display: inline-flex;
     float: right;
+  }
+  .fa-cog{
+    display: inline-flex;
+    float: right;
+    color:grey;
+    margin-left: 10px;
+    font-size:1.5em;
+  }
+  .fa-times-circle{
+    display: inline-flex;
+    float: left;
+    color:red;
+    margin-right: 10px;
+    font-size:1.5em;
   }
