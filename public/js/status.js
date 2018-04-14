@@ -1,8 +1,12 @@
+function getCountAndUpdate() {
+
+};
 $('document').ready(function(){ 
     //Socket IO Client connection/Management
     var socket = io.connect('http://localhost:3000');
     //Listen for upc updates
     socket.on('upc_updated', (data) => {
+        console.log(data);
         if(data.old_val == null){
             var updateUPC = data.new_val.AcceptedUPC;
             if (data.new_val.UPCCount) {
@@ -19,7 +23,20 @@ $('document').ready(function(){
                 } else if (upcCountList <= 50) {
                     $('#' + updateUPC).css('background-color','Yellow');
                 }
-            } 
+            }             
+        } else if (data.new_val.UPCCount != null && data.old_val.UPCCount == null) {
+            var upcCountList = data.new_val.UPCCount;
+            var updateUPC = data.new_val.AcceptedUPC;
+            console.log('trying to add new count');
+            $('#upcList').append('<li ' + 'class="list-group-item"' + 'id=' + '"' + updateUPC + '"' + '>' + updateUPC + '<i class="far fa-times-circle"></i>' + '<span>' + upcCountList + '</span>' + '</li>');
+            if (upcCountList <= 10) {
+                $('#' + updateUPC).css('background-color','Tomato');
+            } else if (upcCountList <= 25) {
+                $('#' + updateUPC).css('background-color','Orange');
+            } else if (upcCountList <= 50) {
+                $('#' + updateUPC).css('background-color','Yellow');
+            }
+            console.log('Count added');
         } else if (data.new_val == null){
             var updateUPC = data.old_val.AcceptedUPC;
             $('#' + updateUPC).remove();
