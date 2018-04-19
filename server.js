@@ -72,7 +72,6 @@ r.connect(config.rethinkdb, function(err, conn) {
                 r.table('upcs').changes().run(conn, (err,cursor) => {
                     cursor.each((err,item)=>{
                         io.emit('upc_updated', item);
-                        //console.log("something happened")
                     })
                 });
             }).then(()=> {
@@ -105,7 +104,7 @@ r.connect(config.rethinkdb, function(err, conn) {
         })
     });
     app.get('/upccounts', (req,res) => {
-        r.table('upcs').filter(r.row.hasFields('UPCCount')).orderBy('date').run(conn, (err, cursor)=>{
+        r.table('upcs').filter(r.row.hasFields('UPCCount')).orderBy('UPCCount').run(conn, (err, cursor)=>{
             if (err) throw err;
             cursor.toArray((err,result)=>{
                 if (err) throw err;
@@ -117,13 +116,12 @@ r.connect(config.rethinkdb, function(err, conn) {
         var employeeID = req.body.employee;
         console.log(employeeID);
         if (employeeID == '') {
-            console.log("its empty");
+            console.log("EMP sign-in is empty");
             res.send('Empty');
             res.end();
         } else if (employeeID.includes(empSubString)) {
             //Try/Insert into ReThinkDB
             var employeeObj = {employee : employeeID};
-            console.log(employeeObj);
             //Try to find it
             r.table('employees').filter({employee:employeeID}).run(conn, (err, cursor) => {
                 if (err) throw err;
@@ -155,11 +153,9 @@ r.connect(config.rethinkdb, function(err, conn) {
         }
     });
     app.post('/upcchange', (req,res) => {
-        console.log(req.body.AcceptedUPC);
-        console.log(req.body.UPCCount);
         var acceptedupc = req.body.AcceptedUPC;
         var upcCount = req.body.UPCCount;
-        r.table('upcs').filter({AcceptedUPC:acceptedupc}).filter(r.row.hasFields("UPCCount")).run(conn, (err,cursor) => {
+        r.table('upcs').filter({AcceptedUPC:acceptedupc}).filter(r.row.hasFields("UPCCount")).orderBy('UPCCount').run(conn, (err,cursor) => {
             if (err) throw err;
             cursor.toArray((err,resu) => {
                 if (err) throw err;
@@ -182,8 +178,6 @@ r.connect(config.rethinkdb, function(err, conn) {
         });
     });
     app.post('/upcset', (req,res) => {
-        console.log(req.body.AcceptedUPC);
-        console.log(req.body.UPCCount);
         var acceptedupc = req.body.AcceptedUPC;
         var upcCount = req.body.UPCCount;
         if (acceptedupc == '') {
@@ -249,10 +243,8 @@ r.connect(config.rethinkdb, function(err, conn) {
             data = data.trim();
             r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
                 if (err) throw err;
-                console.log(data);
                 cursor.toArray((err,resu) => {
                     if (err) throw err;
-                    console.log(resu);
                     if (resu.length != 0) {
                         if (resu[0].UPCCount != null) {
                             console.log('There is a count on this record, and the value is ' + resu[0].UPCCount );
@@ -282,7 +274,6 @@ r.connect(config.rethinkdb, function(err, conn) {
             }).then(
              r.table('upcs').filter({AcceptedUPC:data}).filter(r.row.hasFields("UPCCount")).update({UPCCount: r.row("UPCCount").sub(1)}).run(conn, (err,cursor) => {
                 if (err) throw err;
-                console.log(cursor);
             }));
         })
         sock.on('close', function(data) {
