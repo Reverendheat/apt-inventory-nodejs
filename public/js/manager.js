@@ -63,7 +63,7 @@ function upcChange(atag){
 }
 $('document').ready(function(){
     //Socket IO Client connection/Management
-    var socket = io.connect('http://localhost:3000');
+    var socket = io.connect('http://10.79.1.30:3000');
     //Listen for upc updates
     socket.on('upc_updated', (data) => {
         if(data.old_val == null){
@@ -97,6 +97,10 @@ $('document').ready(function(){
             console.log('Count updated');
         }
     })
+    //Listen for Errors
+    socket.on('Error not found.', (data)=> {
+	console.log('Error not found.');
+    });
     //Listen for Scans (Debug)
     socket.on('UPCScanned', (data) => {
         console.log(data + ' was scanned!');
