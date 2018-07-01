@@ -70,6 +70,8 @@ r.connect(config.rethinkdb, function(err, conn) {
                 return databaseController.createTable(conn, 'employees');
             }).then(function() {
                 return databaseController.createTable(conn, 'upcs');
+            }).then(function() {
+                return databaseController.createTable(conn, 'totalCounts');
             }).then(()=>{
                 r.table('upcs').changes().run(conn, (err,cursor) => {
                     cursor.each((err,item)=>{
@@ -107,6 +109,15 @@ r.connect(config.rethinkdb, function(err, conn) {
     });
     app.get('/upccounts', (req,res) => {
         r.table('upcs').filter(r.row.hasFields('UPCCount')).orderBy('UPCCount').run(conn, (err, cursor)=>{
+            if (err) throw err;
+            cursor.toArray((err,result)=>{
+                if (err) throw err;
+                res.send(result);
+            })
+        })
+    });
+    app.get('/totalcounts', (req,res) => {
+        r.table('totalCounts').run(conn, (err, cursor)=>{
             if (err) throw err;
             cursor.toArray((err,result)=>{
                 if (err) throw err;
@@ -256,9 +267,19 @@ r.connect(config.rethinkdb, function(err, conn) {
                                     console.log('Entry removed because the countdown reached 0');
                                 });
                             }
-                        } else {
-                            console.log('There is no count on this record');
-                        }
+                        } 
+                        var now = moment().format("MM/DD/YYYY hh:mm:ss A");
+                        r.table('totalCounts').insert({
+                            Type: "Success",
+                            Date: now
+                        }).run(conn, (err, resu) => {
+                            if (err) throw err;
+                        });
+                        r.table('totalCounts').filter({Type:"Success"}).count().run(conn, (err, resu) => {
+                            if (err) throw err;
+                            console.log(resu);
+                            io.emit("SuccessReading",resu);
+                        });
                         io.emit("UPCScanned",data);
                         sock.write('I Found it!');
                         var now = moment().format("MM/DD/YYYY hh:mm:ss A")
@@ -270,8 +291,19 @@ r.connect(config.rethinkdb, function(err, conn) {
                             ], {headers: true})
                             .pipe(ws);
                     } else {
+                        var now = moment().format("MM/DD/YYYY hh:mm:ss A");
+                        r.table('totalCounts').insert({
+                            Type: "Error",
+                            Date: now
+                        }).run(conn, (err, resu) => {
+                            if (err) throw err;
+                        });
+                        r.table('totalCounts').filter({Type:"Error"}).count().run(conn, (err, resu) => {
+                            if (err) throw err;
+                            console.log(resu);
+                            io.emit("ErrorReading",resu);
+                        });
                         sock.write('Error reading.');
-			io.emit("Error reading",data);
                     }
                 })
             }).then(

@@ -1,7 +1,7 @@
 $('document').ready(function(){
 
     //Socket IO Client connection/Management
-    var socket = io.connect('http://10.79.1.30:3000');
+    var socket = io.connect('http://localhost:3000');
     socket.on('emp_updated', (data) => {
         if(data.old_val == null){
             var updateEMP = data.new_val.employee

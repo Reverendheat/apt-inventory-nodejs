@@ -12,6 +12,16 @@ function getCountAndUpdate() {
         });
     });
 };
+function getCounts() {
+    $.get('totalCounts', (data) => {
+        var successResult = $.grep(data, function(e){ return e.Type == "Success"; });
+        var errorResult = $.grep(data, function(e){ return e.Type == "Error"; });
+        var tripResult = $.grep(data, function(e){ return e.Type == "Trip"; });
+        $('#successfulScans').html('Successful' + '<span>' + successResult.length + '<span>');        
+        $('#errorScans').html('Errors' + '<span>' + errorResult.length + '<span>');
+        $('#tripScans').html('Trips' + '<span>' + tripResult.length + '<span>');
+    });
+};
 function sortList() {
     $("#upcList li").sort(sort_li).appendTo('#upcList');
     function sort_li(a, b) {
@@ -21,7 +31,7 @@ function sortList() {
 
 $('document').ready(function(){ 
     //Socket IO Client connection/Management
-    var socket = io.connect('http://10.79.1.30:3000');
+    var socket = io.connect('http://localhost:3000');
     //Listen for upc updates
     socket.on('upc_updated', (data) => {
         console.log(data);
@@ -93,6 +103,14 @@ $('document').ready(function(){
         //Re-Sort the list
         sortList();
     });
+    socket.on('ErrorReading', (data)=> {
+        $('#errorScans').html('Errors' + '<span>' + data + '<span>');
+        console.log('Error not found. Currently at ' + data + ' errors!');
+    });
+    socket.on('SuccessReading', (data)=> {
+        $('#successfulScans').html('Successful' + '<span>' + data + '<span>');
+        console.log('Error not found. Currently at ' + data + ' good scans!');
+    });
     window.history.pushState("Status", "Status","/Status");
     document.getElementById("toEmployee").onclick = function () {
         window.location = "/";
@@ -101,4 +119,5 @@ $('document').ready(function(){
         window.location = "/Manager";
     };
     getCountAndUpdate();
+    getCounts();
 });
