@@ -31,7 +31,7 @@ function sortList() {
 
 $('document').ready(function(){ 
     //Socket IO Client connection/Management
-    var socket = io.connect('http://localhost:3000');
+    var socket = io.connect('http://10.79.1.30:3000');
     //Listen for upc updates
     socket.on('upc_updated', (data) => {
         console.log(data);
@@ -109,7 +109,11 @@ $('document').ready(function(){
     });
     socket.on('SuccessReading', (data)=> {
         $('#successfulScans').html('Successful' + '<span>' + data + '<span>');
-        console.log('Error not found. Currently at ' + data + ' good scans!');
+        console.log('Success. Currently at ' + data + ' good scans!');
+    });
+    socket.on('TripReading', (data)=> {
+        $('#tripScans').html('Trips' + '<span>' + data + '<span>');
+        console.log('Error not found. Currently at ' + data + ' trips!');
     });
     window.history.pushState("Status", "Status","/Status");
     document.getElementById("toEmployee").onclick = function () {

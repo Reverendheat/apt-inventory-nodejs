@@ -254,6 +254,20 @@ r.connect(config.rethinkdb, function(err, conn) {
             sock.write('You said ' + data);
             data = data.toString('utf-8');
             data = data.trim();
+            if (data == "Tripped") {
+                var now = moment().format("MM/DD/YYYY hh:mm:ss A");
+                r.table('totalCounts').insert({
+                    Type: "Trip",
+                    Date: now
+                }).run(conn, (err, resu) => {
+                    if (err) throw err;
+                });
+                r.table('totalCounts').filter({Type:"Trip"}).count().run(conn, (err, resu) => {
+                    if (err) throw err;
+                    console.log(resu);
+                    io.emit("TripReading",resu);
+                });
+            }
             r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
                 if (err) throw err;
                 cursor.toArray((err,resu) => {
