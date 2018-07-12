@@ -268,7 +268,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                     io.emit("TripReading",resu);
                 });
             }
-            r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
+            else {r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
                 if (err) throw err;
                 cursor.toArray((err,resu) => {
                     if (err) throw err;
@@ -324,7 +324,7 @@ r.connect(config.rethinkdb, function(err, conn) {
              r.table('upcs').filter({AcceptedUPC:data}).filter(r.row.hasFields("UPCCount")).update({UPCCount: r.row("UPCCount").sub(1)}).run(conn, (err,cursor) => {
                 if (err) throw err;
             }));
-        })
+        }})
         sock.on('close', function(data) {
             console.log("Goodbye, " + sock.remoteAddress +':'+ sock.remotePort)
         })
