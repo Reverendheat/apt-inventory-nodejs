@@ -41,7 +41,10 @@ $('document').ready(function(){
     document.getElementById("toStatus").onclick = function () {
         window.location = "Status";
     };
-
+    //Click event to Pi screen
+    document.getElementById("toPi").onclick = function () {
+        window.location = "Pi";
+    };
     //POST to DB
     $('#employeeSubmit').on('click', (event)=>{
         event.preventDefault();

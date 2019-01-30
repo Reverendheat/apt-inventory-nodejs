@@ -122,6 +122,9 @@ $('document').ready(function(){
     document.getElementById("toManager").onclick = function () {
         window.location = "/Manager";
     };
+    document.getElementById("toPi").onclick = function () {
+        window.location = "/Pi";
+    };
     getCountAndUpdate();
     getCounts();
 });

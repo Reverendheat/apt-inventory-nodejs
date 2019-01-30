@@ -2,34 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>UPC Status</title>
+    <title>Pi Status</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <div class='jumbotron text-center'>
-            <h1>UPC Count Status</h1>
+            <h1>Pi Status</h1>
     </div>
     <div class='container-fluid text-center' style='height:50px'>
             <h3 class='text-center' id='statusH3'> </h3>
     </div>
     <div class='container'>
         <div class='row'>
-            <div class='col-sm-8'>
-                <h3 class='text-center'>UPC Statistics</h3>
-                <ul class="list-group" id='currentCountList'></ul>
-                    <li class="list-group-item" id="successfulScans" style="background-color:lightgreen">Successful </li>
-                    <li class="list-group-item" id="errorScans" style="background-color:tomato">Errors </li>
-                    <li class="list-group-item" id="tripScans" style="background-color:lightcyan">Trips </li>
-                <h3 class='text-center'>UPC Count Down</h3>
-                <ul class="list-group" id='upcList'>
-        
+            <div class='col-sm-6'>
+                <h3 class='text-center'>Pi Check-Ins</h3>
+                <ul class="list-group" id='currentPiList'>
+
                 </ul>
             </div>
-            <div class='col-sm-4'>
+            <div class='col-sm-6'>
                     <button id="toManager">Manager Access</button>
                     <button id="toEmployee">Employee Sing-In</button>
-                    <button id="toPi">Pi Page</button>
+                    <button id="toStatus">Status Page</button>
             </div>
         </div>
     </div>
@@ -39,7 +34,7 @@
     crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script src="js/status.js"></script>
+    <script src="js/pi.js"></script>
 </body>
 </html>
 

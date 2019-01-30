@@ -134,6 +134,9 @@ $('document').ready(function(){
     document.getElementById("toStatus").onclick = function () {
         window.location = "/Status";
     };
+    document.getElementById("toPi").onclick = function () {
+        window.location = "/Pi";
+    };
 
     $('#upcSubmit').on('click', (event)=>{
         event.preventDefault();

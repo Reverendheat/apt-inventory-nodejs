@@ -72,6 +72,8 @@ r.connect(config.rethinkdb, function(err, conn) {
                 return databaseController.createTable(conn, 'upcs');
             }).then(function() {
                 return databaseController.createTable(conn, 'totalCounts');
+            }).then(function() {
+                return databaseController.createTable(conn, 'PiCheckIns');
             }).then(()=>{
                 r.table('upcs').changes().run(conn, (err,cursor) => {
                     cursor.each((err,item)=>{
@@ -116,6 +118,15 @@ r.connect(config.rethinkdb, function(err, conn) {
             })
         })
     });
+    app.get('/pistatus', (req,res)=>{
+        r.table('PiCheckIns').orderBy(r.desc('time')).run(conn, (err, cursor)=>{
+            if (err) throw err;
+            cursor.toArray((err,result)=>{
+                if (err) throw err;
+                res.send(result);
+            })
+        })
+    })
     app.get('/totalcounts', (req,res) => {
         r.table('totalCounts').run(conn, (err, cursor)=>{
             if (err) throw err;
@@ -268,6 +279,32 @@ r.connect(config.rethinkdb, function(err, conn) {
                     io.emit("TripReading",resu);
                 });
             }
+            if (data.includes('online')) {
+                console.log(`${data}`);
+                data = data.replace(' is online!','')
+                dataObj = {
+                    'data': data,
+                    'time': moment().format('MMMM Do YYYY, h:mm:ss a'),
+                }
+                r.table('PiCheckIns').filter({data:data}).run(conn, (err,cursor)=>{
+                    if (err) throw err;
+                    cursor.toArray((err,resu)=>{
+                        if (err) throw err;
+                        if (resu.length == 0) {
+                            r.table('PiCheckIns').insert(dataObj).run(conn, (err,cursor)=>{
+                                if (err) throw err;
+                                console.log('put that shit in there');
+                            })
+                        } else {
+                            r.table('PiCheckIns').filter({data:data}).update({time:dataObj.time}).run(conn,(err,cursor)=>{
+                                if (err) throw err;
+                            });
+                            console.log('it must already exist')
+                        }
+                    });
+                })
+                io.emit("PiOnline", dataObj)
+            }
             else {r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
                 if (err) throw err;
                 cursor.toArray((err,resu) => {
@@ -345,4 +382,8 @@ app.get('/Status', (req,res) => {
     res.sendFile(path.join(__dirname + '/Status.html'));
 });
 
+//Get requests
+app.get('/Pi', (req,res) => {
+    res.sendFile(path.join(__dirname + '/Pi.html'));
+});
 
