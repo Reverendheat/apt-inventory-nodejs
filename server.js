@@ -293,7 +293,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                         if (resu.length == 0) {
                             r.table('PiCheckIns').insert(dataObj).run(conn, (err,cursor)=>{
                                 if (err) throw err;
-                                console.log('put that shit in there');
+                                console.log('throwing it in!');
                             })
                         } else {
                             r.table('PiCheckIns').filter({data:data}).update({time:dataObj.time}).run(conn,(err,cursor)=>{
