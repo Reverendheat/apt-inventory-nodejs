@@ -74,6 +74,8 @@ r.connect(config.rethinkdb, function(err, conn) {
                 return databaseController.createTable(conn, 'totalCounts');
             }).then(function() {
                 return databaseController.createTable(conn, 'PiCheckIns');
+            }).then(function() {
+                return databaseController.createTable(conn, 'FileChanges');
             }).then(()=>{
                 r.table('upcs').changes().run(conn, (err,cursor) => {
                     cursor.each((err,item)=>{
@@ -120,6 +122,15 @@ r.connect(config.rethinkdb, function(err, conn) {
     });
     app.get('/pistatus', (req,res)=>{
         r.table('PiCheckIns').orderBy(r.desc('time')).run(conn, (err, cursor)=>{
+            if (err) throw err;
+            cursor.toArray((err,result)=>{
+                if (err) throw err;
+                res.send(result);
+            })
+        })
+    })
+    app.get('/uploadstatus', (req,res)=>{
+        r.table('FileChanges').orderBy(r.desc('time')).run(conn, (err, cursor)=>{
             if (err) throw err;
             cursor.toArray((err,result)=>{
                 if (err) throw err;
@@ -305,6 +316,32 @@ r.connect(config.rethinkdb, function(err, conn) {
                 })
                 io.emit("PiOnline", dataObj)
             }
+            else if (data.includes('.csv')) {
+                var slicemystringup = data.slice(0,3) + data.slice(-3);
+                console.log(slicemystringup);
+                dataObj = {
+                    'data': slicemystringup,
+                    'time': moment().format('MMMM Do YYYY, h:mm:ss a'),
+                }
+                r.table('FileChanges').filter({data:slicemystringup}).run(conn, (err,cursor)=>{
+                    if (err) throw err;
+                    cursor.toArray((err,resu)=>{
+                        if (err) throw err;
+                        if (resu.length == 0) {
+                            r.table('FileChanges').insert(dataObj).run(conn, (err,cursor)=>{
+                                if (err) throw err;
+                                console.log('throwing it in!');
+                            })
+                        } else {
+                            r.table('FileChanges').filter({data:slicemystringup}).update({time:dataObj.time}).run(conn,(err,cursor)=>{
+                                if (err) throw err;
+                            });
+                            console.log('it must already exist')
+                        }
+                    });
+                })
+                io.emit("FileUploaded", dataObj)
+            }
             else {r.table('upcs').filter({AcceptedUPC:data}).run(conn, (err, cursor) => {
                 if (err) throw err;
                 cursor.toArray((err,resu) => {
@@ -364,6 +401,9 @@ r.connect(config.rethinkdb, function(err, conn) {
         }})
         sock.on('close', function(data) {
             console.log("Goodbye, " + sock.remoteAddress +':'+ sock.remotePort)
+        })
+        sock.on('error', function(data) {
+            console.log(`${sock.remoteAddress} did not disconnect gracefully...`);
         })
     }).listen(config.netserver.port, config.netserver.host);
 });

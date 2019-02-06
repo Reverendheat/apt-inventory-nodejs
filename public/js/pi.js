@@ -5,6 +5,13 @@ function getPiStatus() {
         });
     });
 }
+function getUploadStatus() {
+    $.get('uploadstatus', (data) => {
+        data.forEach(element => {
+            $('#currentUploadList').append('<li ' + 'class="list-group-item"' + ' id=' + '"' + element.data + '"' + '>' + element.data + '<span>' + element.time + '</span>' + '</li>');
+        });
+    });
+}
 function launchSSH(atag) {
     sshDest = $(atag).parent('li')[0].id;
     window.open(`ssh://pi@${sshDest}`);
@@ -18,7 +25,17 @@ $('document').ready(function(){
             $(`#${data.data}`).children().eq(1).text(data.time);
         }
         else {
-            $('#currentPiList').prepend('<li ' + 'class="list-group-item"' + data.data  + ' id=' + '"' + data.data + '"' + '>' + '<a href="#" onclick="launchSSH(this)" class="launchSSH">' + '<i class="fas fa-terminal"></i>' + '</a>' + data.data + '<span>' + data.time + '</span>' + '</li>');
+            $('#currentPiList').prepend('<li ' + 'class="list-group-item"' + data.data  + ' id=' + '"' + data.data + '"' + '>' + data.data + '<span>' + data.time + '</span>' + '</li>');
+        }
+    });
+    socket.on('FileUploaded', (data) => {
+        console.log(data)
+        if ($(`#${data.data}`).length) {
+            $('#currentUploadList').prepend($(`#${data.data}`))
+            $(`#${data.data}`).children().text(data.time);
+        }
+        else {
+            $('#currentUploadList').prepend('<li ' + 'class="list-group-item"' + ' id=' + '"' + data.data + '"' + '>' + data.data + '<span>' + data.time + '</span>' + '</li>');
         }
     });
     window.history.pushState("Pi", "Pi","/Pi");
@@ -32,4 +49,5 @@ $('document').ready(function(){
         window.location = "/Status";
     };
     getPiStatus()
+    getUploadStatus()
 });
