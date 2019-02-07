@@ -293,9 +293,13 @@ r.connect(config.rethinkdb, function(err, conn) {
             if (data.includes('online')) {
                 console.log(`${data}`);
                 data = data.replace(' is online!','')
+                version = data.slice(data.indexOf(' '))
+                version = version.replace(' ', '')
+                data = data.replace(' ' + version,'')
                 dataObj = {
                     'data': data,
                     'time': moment().format('MMMM Do YYYY, h:mm:ss a'),
+                    'version': version,
                 }
                 r.table('PiCheckIns').filter({data:data}).run(conn, (err,cursor)=>{
                     if (err) throw err;
@@ -307,7 +311,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                                 console.log('throwing it in!');
                             })
                         } else {
-                            r.table('PiCheckIns').filter({data:data}).update({time:dataObj.time}).run(conn,(err,cursor)=>{
+                            r.table('PiCheckIns').filter({data:data}).update({time:dataObj.time,version:dataObj.version}).run(conn,(err,cursor)=>{
                                 if (err) throw err;
                             });
                             console.log('it must already exist')

@@ -16,3 +16,10 @@ span{
     margin-right: 10px;
     font-size:1.5em;
   }
+  .fa-terminal{
+    display: inline-flex;
+    float: left;
+    color:gray;
+    margin-right: 10px;
+    font-size:1.5em;
+  }

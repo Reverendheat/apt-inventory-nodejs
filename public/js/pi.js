@@ -1,7 +1,7 @@
 function getPiStatus() {
     $.get('pistatus', (data) => {
         data.forEach(element => {
-            $('#currentPiList').append('<li ' + 'class="list-group-item"' + element.data  + ' id=' + '"' + element.data + '"' + '>' + '<a href="#" onclick="launchSSH(this)" class="launchSSH">' + '<i class="fas fa-terminal"></i>' + '</a>' + element.data + '<span>' + element.time + '</span>' + '</li>');
+            $('#currentPiList').append('<li ' + 'class="list-group-item"' + element.data  + ' id=' + '"' + element.data + '"' + '>' + '<a href="#" onclick="launchSSH(this)" class="launchSSH">' + '<i class="fas fa-terminal"></i>' + '</a>' + element.data + '<span>' + element.time + ' Ver: ' + element.version + '</span>' + '</li>');
         });
     });
 }
@@ -22,10 +22,10 @@ $('document').ready(function(){
     socket.on('PiOnline', (data) => {
         if ($(`#${data.data}`).length) {
             $('#currentPiList').prepend($(`#${data.data}`))
-            $(`#${data.data}`).children().eq(1).text(data.time);
+            $(`#${data.data}`).children().eq(1).text(data.time + ' Ver: ' + data.version);
         }
         else {
-            $('#currentPiList').prepend('<li ' + 'class="list-group-item"' + data.data  + ' id=' + '"' + data.data + '"' + '>' + data.data + '<span>' + data.time + '</span>' + '</li>');
+            $('#currentPiList').prepend('<li ' + 'class="list-group-item"' + data.data  + ' id=' + '"' + data.data + '"' + '>' + data.data + '<span>' + data.time + ' Ver: ' + data.version + '</span>' + '</li>');
         }
     });
     socket.on('FileUploaded', (data) => {
