@@ -273,6 +273,7 @@ r.connect(config.rethinkdb, function(err, conn) {
         console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
         console.log('Server listening on ' + netserver.address().address +':' + netserver.address().port);
         sock.on('data', function(data){
+            piData = JSON.parse(data);
             sock.write('You said ' + data);
             data = data.toString('utf-8');
             data = data.trim();
@@ -290,18 +291,22 @@ r.connect(config.rethinkdb, function(err, conn) {
                     io.emit("TripReading",resu);
                 });
             }
-            if (data.includes('online')) {
+            /* if (data.includes('online')) {
                 console.log(`${data}`);
                 data = data.replace(' is online!','')
                 version = data.slice(data.indexOf(' '))
                 version = version.replace(' ', '')
                 data = data.replace(' ' + version,'')
+                */
+            if (piData.version) {
                 dataObj = {
-                    'data': data,
+                    'hostname': piData.hostname,
                     'time': moment().format('MMMM Do YYYY, h:mm:ss a'),
-                    'version': version,
+                    'version': piData.version,
+                    'cart' : piData.cart,
+                    'employee' : piData.employee
                 }
-                r.table('PiCheckIns').filter({data:data}).run(conn, (err,cursor)=>{
+                r.table('PiCheckIns').filter({hostname:piData.hostname}).run(conn, (err,cursor)=>{
                     if (err) throw err;
                     cursor.toArray((err,resu)=>{
                         if (err) throw err;
@@ -311,7 +316,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                                 console.log('throwing it in!');
                             })
                         } else {
-                            r.table('PiCheckIns').filter({data:data}).update({time:dataObj.time,version:dataObj.version}).run(conn,(err,cursor)=>{
+                            r.table('PiCheckIns').filter({hostname:piData.hostname}).update({time:dataObj.time,version:dataObj.version,cart:dataObj.cart,employee:dataObj.employee}).run(conn,(err,cursor)=>{
                                 if (err) throw err;
                             });
                             console.log('it must already exist')
@@ -359,7 +364,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                                     console.log('Entry removed because the countdown reached 0');
                                 });
                             }
-                        } 
+                        }
                         var now = moment().format("MM/DD/YYYY hh:mm:ss A");
                         r.table('totalCounts').insert({
                             Type: "Success",
