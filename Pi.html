@@ -23,10 +23,23 @@
         </div>
         <div class='row'>
             <div class='col-sm-12'>
-                <h3 class='text-center'>Pi Check-Ins</h3>
-                <ul class="list-group" id='currentPiList'>
+                <h3 class='text-center'>Status</h3>
+<!--                 <ul class="list-group" id='currentPiList'>
 
-                </ul>
+                </ul> -->
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Hostname</th>
+                        <th scope="col">Last Seen</th>
+                        <th scope="col">Program Version</th>
+                        <th scope="col">Cart Number</th>
+                        <th scope="col">Employee Number</th>
+                      </tr>
+                    </thead>
+                    <tbody id='currentPiList'>
+                    </tbody>
+                  </table>
             </div>
 <!--             <div class='col-sm-6'>
                 <h3 class='text-center'>File Uploads</h3>

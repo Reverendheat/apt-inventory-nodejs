@@ -6,7 +6,7 @@ module.exports = {
         db: "inventory"
     },
     express: {
-        port: 3000
+        port: 4000
     },
     netserver: {
         host: "",
