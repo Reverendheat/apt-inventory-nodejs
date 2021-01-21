@@ -20,7 +20,7 @@
     "nodemon": "^1.18.9",
     "rethinkdb": "^2.3.3",
     "rethinkdbdash": "^2.3.31",
-    "socket.io": "^2.0.4",
+    "socket.io": "^2.4.0",
     "uuid": "^3.2.1"
   }
 }
